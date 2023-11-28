@@ -1,0 +1,10 @@
+version: '3'
+services:
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: maps_frontend
+    ports:
+      - "80:80"
+    tty: true
