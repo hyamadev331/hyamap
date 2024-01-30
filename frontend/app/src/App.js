@@ -4,6 +4,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
 import { React, useState, useRef, useCallback } from 'react';
 
 const containerStyle = {
@@ -37,7 +38,7 @@ const App = () => {
       }
     }).then((response) => {
       const results = Array.from(response.data);
-      const locationList = results.map(result => [result.geometry.location, result.name]);
+      const locationList = results.map(result => [result.geometry.location, result.name, result.rating, result.user_ratings_total]);
       setLocationData(locationList);
     }).finally(() => {
       setIsLoading(false);
@@ -48,52 +49,81 @@ const App = () => {
 
   return (
     <div className="App">
-      <LoadScript
-        googleMapsApiKey={process.env.REACT_APP_GOOGLE_API_KEY}
-      >
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={center}
-          zoom={15}
-          onLoad={onMapLoad}
-          onDragEnd={() => {
-            const newCenter = mapRef.current.getCenter();
-            setCenter({ lat: newCenter.lat(), lng: newCenter.lng() });
-            console.log(center);
-          }}
-        >
-          {locationData.map((location, index) => (
-            <Marker key={index} position={location[0]} onClick={() => {
-              setSelectedLocation(location);
-            }} />
-          ))}
-
-          {selectedLocation && (
-            <InfoWindow
-              position={selectedLocation[0]}
-              onCloseClick={() => {
-                setSelectedLocation(null);
+      <Grid container spacing={2} style={{ backgroundColor: '#cfe8fc', color: '#0d47a1', paddingRight: '20px' }}>
+        <Grid item xs={9} spacing={2}>
+          <LoadScript
+            googleMapsApiKey={process.env.REACT_APP_GOOGLE_API_KEY}
+          >
+            <GoogleMap
+              mapContainerStyle={containerStyle}
+              center={center}
+              zoom={15}
+              onLoad={onMapLoad}
+              onDragEnd={() => {
+                const newCenter = mapRef.current.getCenter();
+                setCenter({ lat: newCenter.lat(), lng: newCenter.lng() });
+                console.log(center);
               }}
             >
+              {locationData.map((location, index) => (
+                <Marker key={index} position={location[0]} onClick={() => {
+                  setSelectedLocation(location);
+                }} />
+              ))}
+
+              {selectedLocation && (
+                <InfoWindow
+                  position={selectedLocation[0]}
+                  onCloseClick={() => {
+                    setSelectedLocation(null);
+                  }}
+                >
+                  <div>
+                    <p>{selectedLocation[1]}</p>
+                  </div>
+                </InfoWindow>
+              )}
+            </GoogleMap>
+          </LoadScript>
+        </Grid>
+        <Grid item xs={3} spacing={2} style={{ paddingTop: '30px' }}>
+          <Grid item spacing={2}>
+            <Paper sx={{ height: '40vh', overflow: 'auto' }}>
+              {locationData.map((location, index) => (
+                <div key={index}>
+                  <p onClick={() => setSelectedLocation(location)}>{index + 1}位 {location[1]}</p>
+                </div>
+              ))}
+            </Paper>
+          </Grid>
+          <Grid item spacing={2}>
+            <Paper sx={{ height: '40vh' }}>
               <div>
-                <p>{selectedLocation[1]}</p>
+                <h2>お店の情報</h2>
+                {selectedLocation && (
+                  <div>
+                    <p>店名: {selectedLocation[1]}</p>
+                    <p>評価: {selectedLocation[2]}</p>
+                    <p>レビュー数: {selectedLocation[3]}</p>
+                  </div>
+                )}
               </div>
-            </InfoWindow>
-          )}
-        </GoogleMap>
-      </LoadScript>
-      <Grid container spacing={2} sx={{ mt: 1 }}>
-        <Button variant="contained" color="primary" sx={{ mx: 'auto', width: 200 }} onClick={() => getLocationInfo(params)}>
-          SEARCH
-        </Button>
+            </Paper>
+          </Grid>
+        </Grid>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Button variant="contained" color="primary" sx={{ mx: 'auto', width: 200 }} onClick={() => getLocationInfo(params)}>
+            SEARCH
+          </Button>
+        </Grid>
+        <Backdrop
+          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          open={isLoading}
+        >
+          <CircularProgress color="inherit" />
+        </Backdrop>
       </Grid>
-      <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={isLoading}
-      >
-        <CircularProgress color="inherit" />
-      </Backdrop>
-    </div>
+    </div >
   );
 }
 
